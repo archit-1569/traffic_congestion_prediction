@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TrafficSense India</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0a0c10; --surface:#111318; --surface2:#181b22; --border:rgba(255,255,255,0.07);
+  --accent:#ff5c3a; --green:#22c55e; --yellow:#eab308; --red:#ef4444; --orange:#f97316;
+  --text:#f0f0f0; --muted:#7a7f8e;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;height:100vh;overflow:hidden;}
+.noise{position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.35;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");}
+header{position:fixed;top:0;left:0;right:0;z-index:100;height:56px;padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;background:rgba(10,12,16,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem;display:flex;align-items:center;gap:8px;letter-spacing:-.03em;}
+.logo-dot{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);animation:pulse 2s ease-in-out infinite;}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.4);opacity:.5}}
+.hdr-right{display:flex;align-items:center;gap:1.2rem;font-size:.78rem;color:var(--muted);}
+.live-pill{display:flex;align-items:center;gap:5px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.28);padding:3px 10px;border-radius:20px;color:var(--green);font-size:.72rem;font-weight:600;}
+.live-dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse 1.4s infinite;}
+.acc{display:flex;align-items:center;gap:5px;}
+.acc-dot{width:6px;height:6px;border-radius:50%;background:var(--green);}
+#clock{font-family:'Syne',sans-serif;font-weight:700;font-size:.85rem;}
+
+.layout{display:grid;grid-template-columns:360px 1fr;height:calc(100vh - 56px);margin-top:56px;position:relative;z-index:1;}
+
+/* SIDEBAR */
+.sidebar{background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column;}
+.sidebar::-webkit-scrollbar{width:3px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sec{padding:1.2rem 1.3rem;border-bottom:1px solid var(--border);}
+.sec-lbl{font-family:'Syne',sans-serif;font-size:.6rem;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin-bottom:.85rem;}
+.mtabs{display:flex;gap:.35rem;margin-bottom:1rem;}
+.mtab{flex:1;padding:.4rem 0;border-radius:7px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:.72rem;cursor:pointer;transition:all .2s;text-align:center;}
+.mtab.on{background:rgba(255,92,58,.12);border-color:var(--accent);color:var(--accent);font-weight:600;}
+.cg{margin-bottom:1rem;}
+.cl{font-size:.76rem;color:var(--muted);margin-bottom:.4rem;display:block;}
+select{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:.52rem .8rem;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.82rem;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath fill='%237a7f8e' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;transition:border-color .2s;}
+select:focus{outline:none;border-color:var(--accent);}
+input[type=range]{width:100%;-webkit-appearance:none;height:3px;background:var(--border);border-radius:2px;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent);cursor:pointer;box-shadow:0 0 6px var(--accent);}
+.rlbls{display:flex;justify-content:space-between;font-size:.62rem;color:var(--muted);margin-top:.35rem;}
+.pbtn{width:100%;padding:.82rem;border:none;border-radius:10px;cursor:pointer;background:linear-gradient(135deg,var(--accent),#ff8c3a);color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:.9rem;letter-spacing:.02em;transition:transform .15s,box-shadow .15s;box-shadow:0 4px 18px rgba(255,92,58,.32);}
+.pbtn:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(255,92,58,.42);}
+.pbtn:active{transform:translateY(0);}
+
+/* RESULT */
+.rcard{background:var(--surface2);border-radius:11px;padding:1.1rem;border:1px solid var(--border);margin-bottom:.9rem;}
+.rlabel{font-size:.72rem;color:var(--muted);margin-bottom:.3rem;}
+.rval{font-family:'Syne',sans-serif;font-weight:700;font-size:2rem;line-height:1;}
+.rsub{font-size:.74rem;color:var(--muted);margin-top:.28rem;line-height:1.5;}
+.cbar{height:7px;border-radius:4px;background:var(--border);margin:.7rem 0;overflow:hidden;}
+.cfill{height:100%;border-radius:4px;transition:width .9s cubic-bezier(.4,0,.2,1),background .4s;}
+.badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:.69rem;font-weight:600;letter-spacing:.03em;}
+.bg{background:rgba(34,197,94,.15);color:var(--green);}
+.by{background:rgba(234,179,8,.15);color:var(--yellow);}
+.bo{background:rgba(249,115,22,.15);color:var(--orange);}
+.br{background:rgba(239,68,68,.15);color:var(--red);}
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin-bottom:.9rem;}
+.mstat{background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:.8rem;}
+.msn{font-family:'Syne',sans-serif;font-weight:700;font-size:1.2rem;}
+.msl{font-size:.66rem;color:var(--muted);margin-top:.18rem;}
+.mchart{display:flex;align-items:flex-end;gap:2px;height:54px;}
+.b{flex:1;border-radius:2px 2px 0 0;transition:all .3s;cursor:pointer;min-width:0;}
+.b:hover{opacity:.72;}
+.cx{display:flex;justify-content:space-between;font-size:.56rem;color:var(--muted);margin-top:3px;}
+.dinfo{font-size:.74rem;color:var(--muted);line-height:1.9;}
+.dinfo strong{color:var(--text);}
+
+/* MAP PANEL */
+.map-panel{display:flex;flex-direction:column;position:relative;overflow:hidden;}
+.map-area{flex:1;position:relative;background:#0d1014;}
+#mapSvg{width:100%;height:100%;}
+.map-overlay-top{position:absolute;top:.9rem;left:.9rem;z-index:10;background:rgba(17,19,24,.93);border:1px solid var(--border);border-radius:10px;padding:.7rem .95rem;backdrop-filter:blur(12px);min-width:165px;}
+.mot-city{font-family:'Syne',sans-serif;font-weight:700;font-size:.88rem;}
+.mot-sub{font-size:.64rem;color:var(--muted);margin-top:1px;}
+.mot-row{display:flex;justify-content:space-between;font-size:.7rem;color:var(--muted);margin-top:5px;}
+.mot-row strong{color:var(--text);}
+.map-controls{position:absolute;top:.9rem;right:.9rem;z-index:10;display:flex;flex-direction:column;gap:.45rem;}
+.mbtn{background:rgba(17,19,24,.93);border:1px solid var(--border);color:var(--text);padding:.42rem .8rem;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.73rem;transition:all .2s;backdrop-filter:blur(10px);display:flex;align-items:center;gap:5px;white-space:nowrap;}
+.mbtn:hover{border-color:var(--accent);color:var(--accent);}
+.mbtn.on{border-color:var(--accent);background:rgba(255,92,58,.1);color:var(--accent);}
+.legend{position:absolute;bottom:.9rem;left:.9rem;z-index:10;background:rgba(17,19,24,.93);border:1px solid var(--border);border-radius:9px;padding:.75rem .95rem;backdrop-filter:blur(12px);}
+.leg-ttl{font-size:.6rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:.5rem;}
+.leg-bar{width:150px;height:6px;border-radius:3px;background:linear-gradient(to right,#22c55e,#eab308,#f97316,#ef4444);margin-bottom:.38rem;}
+.leg-lbls{display:flex;justify-content:space-between;font-size:.59rem;color:var(--muted);}
+
+/* BOTTOM */
+.bottom{background:var(--surface);border-top:1px solid var(--border);height:182px;padding:1rem 1.3rem;flex-shrink:0;}
+.bgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:.8rem;height:calc(100% - 26px);}
+.bcard{background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:.85rem;display:flex;flex-direction:column;justify-content:space-between;transition:border-color .2s,transform .2s;cursor:pointer;}
+.bcard:hover{border-color:rgba(255,92,58,.4);transform:translateY(-2px);}
+.bcard.on{border-color:var(--accent);background:rgba(255,92,58,.06);}
+.bcy{font-family:'Syne',sans-serif;font-weight:700;font-size:.8rem;}
+.bcr{font-size:.64rem;color:var(--muted);margin-top:2px;}
+.bspd{font-family:'Syne',sans-serif;font-weight:800;font-size:1.35rem;margin:.22rem 0;}
+.bspd span{font-size:.6rem;font-weight:400;color:var(--muted);}
+.bbar{height:3px;border-radius:2px;background:var(--border);overflow:hidden;}
+.bfill{height:100%;border-radius:2px;}
+
+/* LOADING */
+.loader{position:absolute;inset:0;background:rgba(10,12,16,.88);backdrop-filter:blur(4px);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;opacity:0;pointer-events:none;transition:opacity .25s;}
+.loader.on{opacity:1;pointer-events:all;}
+.spin{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin-bottom:.9rem;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ltxt{font-family:'Syne',sans-serif;font-size:.8rem;color:var(--muted);}
+
+/* TOOLTIP */
+.tip{position:absolute;background:rgba(17,19,24,.97);border:1px solid var(--border);border-radius:9px;padding:.7rem .9rem;font-size:.76rem;pointer-events:none;z-index:50;min-width:160px;display:none;backdrop-filter:blur(14px);}
+.tip-title{font-family:'Syne',sans-serif;font-weight:700;font-size:.84rem;margin-bottom:6px;}
+.tip-row{display:flex;justify-content:space-between;gap:1rem;color:var(--muted);margin-top:3px;}
+.tip-row strong{color:var(--text);}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.fu{animation:fadeUp .38s ease forwards;}
+</style>
+</head>
+<body>
+<div class="noise"></div>
+<header>
+  <div class="logo"><div class="logo-dot"></div>TrafficSense<span style="color:var(--accent)">India</span></div>
+  <div class="hdr-right">
+    <div class="acc"><div class="acc-dot"></div>Accuracy: <strong style="color:var(--text);margin-left:3px" id="accLbl">91.4%</strong></div>
+    <div class="live-pill"><div class="live-dot"></div>LIVE SIMULATION</div>
+    <div id="clock"></div>
+  </div>
+</header>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sec">
+      <div class="sec-lbl">ML Model</div>
+      <div class="mtabs">
+        <button class="mtab on" onclick="setModel(this,'rf')">Random Forest</button>
+        <button class="mtab" onclick="setModel(this,'xgb')">XGBoost</button>
+        <button class="mtab" onclick="setModel(this,'lstm')">LSTM</button>
+      </div>
+      <div class="cg"><label class="cl">City</label>
+        <select id="citySel" onchange="onCity()">
+          <option value="delhi">New Delhi</option><option value="mumbai">Mumbai</option>
+          <option value="bangalore">Bengaluru</option><option value="chennai">Chennai</option>
+          <option value="kolkata">Kolkata</option><option value="hyderabad">Hyderabad</option>
+          <option value="pune">Pune</option><option value="ahmedabad">Ahmedabad</option>
+        </select>
+      </div>
+      <div class="cg"><label class="cl">Corridor / Route</label><select id="corrSel" onchange="onCorridor()"></select></div>
+      <div class="cg"><label class="cl">Day of Week</label>
+        <select id="daySel">
+          <option value="0">Monday</option><option value="1">Tuesday</option><option value="2">Wednesday</option>
+          <option value="3">Thursday</option><option value="4">Friday</option><option value="5">Saturday</option><option value="6">Sunday</option>
+        </select>
+      </div>
+      <div class="cg"><label class="cl">Hour of Day — <span id="hrLbl">8:00 AM</span></label>
+        <input type="range" id="hrSlider" min="0" max="23" value="8" oninput="updateHr(this.value)">
+        <div class="rlbls"><span>12 AM</span><span>6 AM</span><span>12 PM</span><span>6 PM</span><span>11 PM</span></div>
+      </div>
+      <div class="cg"><label class="cl">Weather</label>
+        <select id="wxSel">
+          <option value="clear">Clear / Sunny</option><option value="overcast">Overcast</option>
+          <option value="light_rain">Light Rain</option><option value="heavy_rain">Heavy Rain</option><option value="fog">Dense Fog</option>
+        </select>
+      </div>
+      <div class="cg"><label class="cl">Event / Holiday</label>
+        <select id="evSel">
+          <option value="none">None</option><option value="holiday">Public Holiday</option>
+          <option value="festival">Festival / Mela</option><option value="sports">Sports Event</option><option value="strike">Road Strike</option>
+        </select>
+      </div>
+      <button class="pbtn" onclick="predict()">Run Prediction →</button>
+    </div>
+
+    <div class="sec" id="resSec" style="display:none">
+      <div class="sec-lbl">Prediction Result</div>
+      <div class="rcard fu">
+        <div class="rlabel">Predicted Congestion</div>
+        <div style="display:flex;align-items:baseline;gap:.55rem;flex-wrap:wrap">
+          <div class="rval" id="rPct">—</div><div id="rBadge"></div>
+        </div>
+        <div class="cbar"><div class="cfill" id="rBar" style="width:0%"></div></div>
+        <div class="rsub" id="rDesc">—</div>
+      </div>
+      <div class="sgrid">
+        <div class="mstat"><div class="msn" id="rSpd">—</div><div class="msl">Avg Speed (km/h)</div></div>
+        <div class="mstat"><div class="msn" id="rDly">—</div><div class="msl">Est. Delay (min)</div></div>
+        <div class="mstat"><div class="msn" id="rDen">—</div><div class="msl">Vehicles / km</div></div>
+        <div class="mstat"><div class="msn" id="rConf">—</div><div class="msl">Confidence</div></div>
+      </div>
+    </div>
+
+    <div class="sec" id="chartSec" style="display:none">
+      <div class="sec-lbl">Hourly Trend (Today)</div>
+      <div class="mchart" id="mchart"></div>
+      <div class="cx"><span>12a</span><span>3a</span><span>6a</span><span>9a</span><span>12p</span><span>3p</span><span>6p</span><span>9p</span><span>11p</span></div>
+    </div>
+
+    <div class="sec" id="dataSec" style="display:none">
+      <div class="sec-lbl">Dataset Info</div>
+      <div class="dinfo">
+        <div>Records: <strong>2.1M+</strong></div>
+        <div>Period: <strong>Jan 2018 – Dec 2023</strong></div>
+        <div>Features: <strong>18 variables</strong></div>
+        <div>Train / Test: <strong>80 / 20</strong></div>
+        <div>Model RMSE: <strong id="rRmse">—</strong></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAP + BOTTOM -->
+  <div class="map-panel">
+    <div class="loader" id="loader"><div class="spin"></div><div class="ltxt" id="ltxt">Running model…</div></div>
+
+    <div class="map-area" id="mapArea">
+      <!-- SVG India Map -->
+      <svg id="mapSvg" viewBox="0 0 800 700" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <filter id="glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          <radialGradient id="cityGrad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#ff5c3a" stop-opacity=".35"/>
+            <stop offset="100%" stop-color="#ff5c3a" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <!-- India outline - simplified path -->
+        <g id="indiaMap">
+          <path id="india-shape" d="
+            M 310 55 L 330 50 L 360 52 L 390 48 L 420 55 L 450 60 L 470 70 L 490 80
+            L 510 75 L 530 85 L 545 100 L 555 120 L 560 140 L 555 160 L 560 175
+            L 575 185 L 585 200 L 580 215 L 570 225 L 575 240 L 570 255 L 560 265
+            L 555 280 L 560 295 L 555 310 L 545 325 L 535 340 L 520 355 L 505 370
+            L 490 385 L 475 400 L 460 415 L 445 430 L 435 445 L 430 460 L 425 475
+            L 420 490 L 415 505 L 410 520 L 405 535 L 400 550 L 395 565 L 390 575
+            L 385 565 L 382 550 L 378 535 L 375 520 L 370 510 L 360 500 L 350 490
+            L 340 478 L 330 465 L 318 455 L 305 445 L 292 435 L 278 425 L 265 415
+            L 252 402 L 242 390 L 235 375 L 228 360 L 222 345 L 218 330 L 215 315
+            L 210 300 L 205 285 L 200 270 L 198 255 L 200 240 L 205 225 L 208 210
+            L 205 195 L 200 180 L 198 165 L 200 150 L 205 135 L 212 122 L 220 110
+            L 232 100 L 245 92 L 258 84 L 272 76 L 285 68 L 298 62 Z
+            M 420 490 L 435 505 L 445 520 L 450 535 L 448 548 L 440 558 L 430 560
+            L 415 555 L 405 545 L 400 535 L 398 520 L 400 508 L 408 498 Z
+          " fill="#151a24" stroke="#2a3245" stroke-width="1.5" stroke-linejoin="round"/>
+          <!-- State boundaries - subtle -->
+          <g stroke="#1e2535" stroke-width=".8" fill="none" opacity=".6">
+            <line x1="310" y1="200" x2="450" y2="200"/>
+            <line x1="300" y1="280" x2="490" y2="280"/>
+            <line x1="280" y1="350" x2="520" y2="350"/>
+            <line x1="350" y1="150" x2="350" y2="420"/>
+            <line x1="410" y1="120" x2="410" y2="400"/>
+            <line x1="460" y1="140" x2="460" y2="340"/>
+            <line x1="250" y1="250" x2="380" y2="250"/>
+            <line x1="240" y1="320" x2="360" y2="340"/>
+            <line x1="480" y1="230" x2="540" y2="260"/>
+          </g>
+          <!-- Road network - subtle lines -->
+          <g id="roads" stroke="#222b3a" stroke-width="1" fill="none" opacity=".5">
+            <path d="M 383 130 Q 370 200 360 280 Q 350 350 360 420 Q 370 470 390 535"/>
+            <path d="M 383 130 Q 420 150 460 200 Q 490 250 510 300"/>
+            <path d="M 383 130 Q 350 160 320 200 Q 290 240 270 300"/>
+            <path d="M 270 300 Q 310 320 360 330 Q 410 340 460 330 Q 500 320 520 300"/>
+            <path d="M 310 400 Q 350 380 390 390 Q 430 395 460 380"/>
+          </g>
+        </g>
+        <!-- City pulse rings -->
+        <g id="cityPulses"></g>
+        <!-- City markers -->
+        <g id="cityDots"></g>
+        <!-- Selected corridor highlight -->
+        <g id="corridorHL"></g>
+        <!-- Tooltip anchor -->
+        <g id="tipAnchor"></g>
+      </svg>
+
+      <div class="tip" id="tip">
+        <div class="tip-title" id="tipTitle"></div>
+        <div class="tip-row">Congestion <strong id="tipCong"></strong></div>
+        <div class="tip-row">Avg Speed <strong id="tipSpd"></strong></div>
+        <div class="tip-row">Vehicles/km <strong id="tipDen"></strong></div>
+      </div>
+
+      <div class="map-overlay-top">
+        <div class="mot-city" id="motCity">New Delhi</div>
+        <div class="mot-sub">India Traffic Map · Simulated Data</div>
+        <div class="mot-row">Speed <strong id="motSpd">22 km/h</strong></div>
+        <div class="mot-row">Congestion <strong id="motCong" style="color:var(--orange)">74%</strong></div>
+      </div>
+
+      <div class="map-controls">
+        <button class="mbtn on" id="btnPulse" onclick="togglePulse(this)">🔵 Pulse Rings</button>
+        <button class="mbtn on" id="btnLabels" onclick="toggleLabels(this)">🏙️ City Labels</button>
+        <button class="mbtn" onclick="zoomIndia()">⊕ Fit India</button>
+      </div>
+
+      <div class="legend">
+        <div class="leg-ttl">Congestion Intensity</div>
+        <div class="leg-bar"></div>
+        <div class="leg-lbls"><span>Free</span><span>Moderate</span><span>Heavy</span><span>Standstill</span></div>
+      </div>
+    </div>
+
+    <div class="bottom">
+      <div class="sec-lbl" style="margin-bottom:.65rem">All India — City Overview</div>
+      <div class="bgrid" id="cityCards"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const CITIES = {
+  delhi:     {name:"New Delhi", sx:383,sy:148, corridors:[
+    {name:"NH-48 (Delhi–Gurugram)",  sx:358,sy:168},{name:"Ring Road – Dhaula Kuan",sx:372,sy:155},
+    {name:"NH-44 (Delhi–Sonipat)",   sx:383,sy:132},{name:"Outer Ring Road",        sx:395,sy:152},
+    {name:"NH-24 (Delhi–Meerut)",    sx:405,sy:148},{name:"Yamuna Expressway",       sx:398,sy:178}]},
+  mumbai:    {name:"Mumbai",    sx:272,sy:310, corridors:[
+    {name:"Western Express Hwy",     sx:268,sy:295},{name:"Eastern Express Hwy",     sx:282,sy:305},
+    {name:"Sion–Panvel Hwy",         sx:292,sy:318},{name:"NH-48 (Mumbai–Pune)",     sx:300,sy:330},
+    {name:"Marine Drive–Worli",      sx:260,sy:322},{name:"Bandra–Kurla Complex",    sx:272,sy:308}]},
+  bangalore: {name:"Bengaluru", sx:370,sy:448, corridors:[
+    {name:"ORR – Marathahalli",      sx:385,sy:442},{name:"Hosur Road (NH-44)",      sx:378,sy:460},
+    {name:"NH-48 (Bluru–Mysuru)",   sx:355,sy:452},{name:"Bellary Road",             sx:370,sy:432},
+    {name:"Tumkur Road",             sx:360,sy:438},{name:"Sarjapur Road",            sx:388,sy:452}]},
+  chennai:   {name:"Chennai",   sx:412,sy:442, corridors:[
+    {name:"Anna Salai (Mount Rd)",   sx:408,sy:438},{name:"NH-48 (Chennai–Bluru)",  sx:400,sy:452},
+    {name:"GST Road",                sx:406,sy:460},{name:"OMR – IT Corridor",       sx:420,sy:448},
+    {name:"Poonamallee High Rd",     sx:398,sy:436},{name:"ECR (East Coast Rd)",     sx:425,sy:455}]},
+  kolkata:   {name:"Kolkata",   sx:498,sy:268, corridors:[
+    {name:"AJC Bose Road",           sx:492,sy:272},{name:"EM Bypass",               sx:506,sy:270},
+    {name:"NH-12 (Klkata–Asnsol)",  sx:486,sy:258},{name:"Jessore Road",            sx:492,sy:258},
+    {name:"VIP Road",                sx:510,sy:265},{name:"Kona Expressway",          sx:482,sy:275}]},
+  hyderabad: {name:"Hyderabad", sx:385,sy:378, corridors:[
+    {name:"ORR – Nanakramguda",      sx:374,sy:370},{name:"NH-44 (Hyd–Bengaluru)",  sx:378,sy:390},
+    {name:"Mehdipatnam–Tolichowki",  sx:380,sy:375},{name:"Banjara Hills Road",      sx:392,sy:372},
+    {name:"Uppal–LB Nagar",          sx:400,sy:382},{name:"PVNR Expressway",         sx:390,sy:388}]},
+  pune:      {name:"Pune",      sx:305,sy:328, corridors:[
+    {name:"NH-48 (Pune–Mumbai)",     sx:292,sy:322},{name:"Khadki–Dapodi Rd",        sx:302,sy:318},
+    {name:"Solapur Road",            sx:318,sy:335},{name:"Nagar Road",              sx:315,sy:322},
+    {name:"Sinhagad Road",           sx:296,sy:335},{name:"Pimpri–Chinchwad Hwy",    sx:298,sy:312}]},
+  ahmedabad: {name:"Ahmedabad", sx:285,sy:218, corridors:[
+    {name:"SG Highway",              sx:276,sy:210},{name:"NH-47 (Ahm–Rajkot)",     sx:265,sy:216},
+    {name:"CG Road",                 sx:288,sy:214},{name:"SP Ring Road",            sx:296,sy:210},
+    {name:"Sardar Patel Ring Road",  sx:294,sy:226},{name:"Dholera SIR Expressway",  sx:282,sy:240}]}
+};
+
+const LIVE = {
+  delhi:     {speed:22,cong:74, trend:[30,22,18,15,35,58,76,82,78,74,68,60,55,58,65,72,80,84,78,70,60,48,38,32]},
+  mumbai:    {speed:18,cong:82, trend:[28,20,16,14,32,55,78,86,80,76,70,62,58,64,70,78,86,88,82,72,58,44,34,28]},
+  bangalore: {speed:26,cong:68, trend:[35,26,20,18,38,62,72,78,72,68,60,54,50,56,64,70,76,80,74,64,54,42,36,30]},
+  chennai:   {speed:30,cong:60, trend:[38,30,24,20,42,65,70,74,68,62,54,48,46,52,60,68,74,76,70,60,50,40,34,30]},
+  kolkata:   {speed:20,cong:78, trend:[32,24,18,16,36,60,76,82,78,72,64,56,52,58,68,74,80,82,76,68,56,44,36,28]},
+  hyderabad: {speed:28,cong:65, trend:[36,28,22,18,40,64,70,76,70,65,58,50,48,54,62,70,76,78,72,62,52,42,34,30]},
+  pune:      {speed:32,cong:55, trend:[40,32,26,22,44,66,68,72,66,60,52,46,44,50,58,66,72,74,68,58,48,38,32,28]},
+  ahmedabad: {speed:34,cong:50, trend:[42,34,28,24,46,68,66,70,64,58,50,44,42,48,56,64,70,72,66,56,46,36,30,26]}
+};
+
+const MM = {rf:{acc:'91.4%',rmse:'4.2',m:1.00},xgb:{acc:'93.1%',rmse:'3.8',m:0.97},lstm:{acc:'89.7%',rmse:'5.1',m:1.04}};
+let activeModel='rf', activeCity='delhi', showPulse=true, showLabels=true;
+let pulseAnimFrames=[];
+
+function cc(p){return p<30?'#22c55e':p<55?'#eab308':p<75?'#f97316':'#ef4444';}
+function cbadge(p){
+  const cls=p<30?'bg':p<55?'by':p<75?'bo':'br';
+  const lbl=p<30?'Free Flow':p<55?'Moderate':p<75?'Heavy':'Standstill';
+  return `<span class="badge ${cls}">${lbl}</span>`;
+}
+function cdesc(p){
+  if(p<30)return'Traffic moving freely. No significant delays.';
+  if(p<55)return'Moderate traffic. Minor slowdowns expected at junctions.';
+  if(p<75)return'Heavy congestion. Significant delays on this corridor.';
+  return'Severe congestion. Near standstill — use alternate routes.';
+}
+
+function setModel(btn,m){
+  document.querySelectorAll('.mtab').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on'); activeModel=m;
+  document.getElementById('accLbl').textContent=MM[m].acc;
+}
+
+function updateHr(v){
+  const h=parseInt(v),ap=h<12?'AM':'PM',d=h===0?12:h>12?h-12:h;
+  document.getElementById('hrLbl').textContent=`${d}:00 ${ap}`;
+}
+
+function onCity(){
+  activeCity=document.getElementById('citySel').value;
+  const cs=CITIES[activeCity].corridors;
+  document.getElementById('corrSel').innerHTML=cs.map(c=>`<option>${c.name}</option>`).join('');
+  updateOverlay();
+  renderMap();
+  buildCards();
+}
+
+function onCorridor(){
+  const idx=document.getElementById('corrSel').selectedIndex;
+  highlightCorridor(idx);
+}
+
+function predict(){
+  const city=document.getElementById('citySel').value;
+  const hour=parseInt(document.getElementById('hrSlider').value);
+  const day=parseInt(document.getElementById('daySel').value);
+  const wx=document.getElementById('wxSel').value;
+  const ev=document.getElementById('evSel').value;
+  const lo=document.getElementById('loader');
+  lo.classList.add('on');
+  const msgs=['Fetching historical dataset…','Extracting features…','Training on corridor data…','Generating prediction…'];
+  let mi=0;
+  const lt=document.getElementById('ltxt');
+  const iv=setInterval(()=>{lt.textContent=msgs[mi++%msgs.length];},400);
+  setTimeout(()=>{
+    clearInterval(iv); lo.classList.remove('on');
+    const base=LIVE[city].trend[hour];
+    const wf={clear:1,overcast:1.05,light_rain:1.18,heavy_rain:1.38,fog:1.28}[wx];
+    const ef={none:1,holiday:.75,festival:1.35,sports:1.22,strike:1.45}[ev];
+    const df=day>=5?.78:1;
+    const cong=Math.min(98,Math.round(base*wf*ef*df*MM[activeModel].m));
+    const spd=Math.max(5,Math.round(55-cong*.48));
+    const dly=Math.round(cong*.45+Math.random()*3);
+    const den=Math.round(20+cong*1.8);
+    const conf=Math.round(85+Math.random()*10);
+    document.getElementById('rPct').textContent=cong+'%';
+    document.getElementById('rBadge').innerHTML=cbadge(cong);
+    document.getElementById('rBar').style.width=cong+'%';
+    document.getElementById('rBar').style.background=cc(cong);
+    document.getElementById('rDesc').textContent=cdesc(cong);
+    document.getElementById('rSpd').textContent=spd;
+    document.getElementById('rDly').textContent='+'+dly;
+    document.getElementById('rDen').textContent=den;
+    document.getElementById('rConf').textContent=conf+'%';
+    document.getElementById('rRmse').textContent=MM[activeModel].rmse;
+    document.getElementById('resSec').style.display='block';
+    document.getElementById('chartSec').style.display='block';
+    document.getElementById('dataSec').style.display='block';
+    drawChart(city,hour);
+    updateOverlay(cong,spd);
+    renderMap(cong);
+    buildCards();
+  },1600);
+}
+
+function drawChart(city,curHr){
+  const t=LIVE[city].trend, mx=Math.max(...t);
+  document.getElementById('mchart').innerHTML=t.map((v,i)=>{
+    const h=Math.round((v/mx)*50), isNow=i===curHr;
+    const col=isNow?cc(v):(v>70?'rgba(239,68,68,.42)':v>50?'rgba(234,179,8,.38)':'rgba(34,197,94,.32)');
+    const glo=isNow?`box-shadow:0 0 7px ${cc(v)};`:'';
+    return `<div class="b" style="height:${h}px;background:${col};${glo}" title="${v}% at ${i}:00"></div>`;
+  }).join('');
+}
+
+function updateOverlay(cong,spd){
+  const d=LIVE[activeCity];
+  document.getElementById('motCity').textContent=CITIES[activeCity].name;
+  document.getElementById('motSpd').textContent=(spd||d.speed)+' km/h';
+  const c=cong||d.cong;
+  document.getElementById('motCong').textContent=c+'%';
+  document.getElementById('motCong').style.color=cc(c);
+}
+
+// ─── SVG MAP ─────────────────────────────────────────────────────────────────
+function renderMap(overrideCong){
+  const svg=document.getElementById('mapSvg');
+  const dotsG=document.getElementById('cityDots');
+  const pulseG=document.getElementById('cityPulses');
+  dotsG.innerHTML=''; pulseG.innerHTML='';
+
+  Object.entries(CITIES).forEach(([key,city])=>{
+    const d=LIVE[key];
+    const cong=key===activeCity&&overrideCong?overrideCong:d.cong;
+    const col=cc(cong);
+    const isActive=key===activeCity;
+    const r=isActive?9:6;
+
+    // Pulse ring
+    if(showPulse){
+      const ring=document.createElementNS('http://www.w3.org/2000/svg','circle');
+      ring.setAttribute('cx',city.sx); ring.setAttribute('cy',city.sy);
+      ring.setAttribute('r',r+4); ring.setAttribute('fill','none');
+      ring.setAttribute('stroke',col); ring.setAttribute('stroke-width','1.5');
+      ring.setAttribute('opacity','0.45');
+      const anim=document.createElementNS('http://www.w3.org/2000/svg','animate');
+      anim.setAttribute('attributeName','r'); anim.setAttribute('values',`${r+2};${r+18};${r+2}`);
+      anim.setAttribute('dur','2.4s'); anim.setAttribute('repeatCount','indefinite');
+      const anim2=document.createElementNS('http://www.w3.org/2000/svg','animate');
+      anim2.setAttribute('attributeName','opacity'); anim2.setAttribute('values','0.5;0;0.5');
+      anim2.setAttribute('dur','2.4s'); anim2.setAttribute('repeatCount','indefinite');
+      ring.appendChild(anim); ring.appendChild(anim2);
+      pulseG.appendChild(ring);
+    }
+
+    // Dot
+    const dot=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    dot.setAttribute('cx',city.sx); dot.setAttribute('cy',city.sy); dot.setAttribute('r',r);
+    dot.setAttribute('fill',col); dot.setAttribute('stroke',isActive?'#fff':'rgba(255,255,255,.6)');
+    dot.setAttribute('stroke-width',isActive?'2':'1.2'); dot.setAttribute('cursor','pointer');
+    if(isActive) dot.setAttribute('filter','url(#glow)');
+    dot.addEventListener('mouseenter',(e)=>showTip(e,key,cong));
+    dot.addEventListener('mouseleave',hideTip);
+    dot.addEventListener('click',()=>selectCity(key));
+    dotsG.appendChild(dot);
+
+    // Label
+    if(showLabels){
+      const txt=document.createElementNS('http://www.w3.org/2000/svg','text');
+      txt.setAttribute('x',city.sx+r+5); txt.setAttribute('y',city.sy+4);
+      txt.setAttribute('fill',isActive?'#f0f0f0':'#9aa0b0'); txt.setAttribute('font-size',isActive?'10':'9');
+      txt.setAttribute('font-family','Syne,sans-serif'); txt.setAttribute('font-weight',isActive?'700':'500');
+      txt.setAttribute('pointer-events','none');
+      txt.textContent=city.name;
+      dotsG.appendChild(txt);
+    }
+  });
+
+  highlightCorridor(document.getElementById('corrSel').selectedIndex);
+}
+
+function highlightCorridor(idx){
+  const hl=document.getElementById('corridorHL');
+  hl.innerHTML='';
+  const city=CITIES[activeCity];
+  const corr=city.corridors[idx];
+  if(!corr)return;
+  const d=LIVE[activeCity];
+  const cong=d.cong;
+
+  // Line from city center to corridor
+  const line=document.createElementNS('http://www.w3.org/2000/svg','line');
+  line.setAttribute('x1',city.sx); line.setAttribute('y1',city.sy);
+  line.setAttribute('x2',corr.sx); line.setAttribute('y2',corr.sy);
+  line.setAttribute('stroke',cc(cong)); line.setAttribute('stroke-width','2');
+  line.setAttribute('stroke-dasharray','4 3'); line.setAttribute('opacity','0.7');
+  hl.appendChild(line);
+
+  // Corridor dot
+  const dot=document.createElementNS('http://www.w3.org/2000/svg','circle');
+  dot.setAttribute('cx',corr.sx); dot.setAttribute('cy',corr.sy); dot.setAttribute('r','5');
+  dot.setAttribute('fill',cc(cong)); dot.setAttribute('stroke','#fff');
+  dot.setAttribute('stroke-width','1.5'); dot.setAttribute('filter','url(#glow)');
+  hl.appendChild(dot);
+
+  // Corridor label
+  const txt=document.createElementNS('http://www.w3.org/2000/svg','text');
+  txt.setAttribute('x',corr.sx+8); txt.setAttribute('y',corr.sy+4);
+  txt.setAttribute('fill','#f0f0f0'); txt.setAttribute('font-size','8.5');
+  txt.setAttribute('font-family','DM Sans,sans-serif'); txt.setAttribute('font-weight','500');
+  txt.textContent=corr.name;
+  hl.appendChild(txt);
+}
+
+function showTip(e,key,cong){
+  const city=CITIES[key], d=LIVE[key];
+  const c=cong||d.cong;
+  document.getElementById('tipTitle').textContent=city.name;
+  document.getElementById('tipCong').textContent=c+'%';
+  document.getElementById('tipCong').style.color=cc(c);
+  document.getElementById('tipSpd').textContent=(d.speed)+' km/h';
+  document.getElementById('tipDen').textContent=Math.round(20+c*1.8);
+  const tip=document.getElementById('tip');
+  const rect=document.getElementById('mapArea').getBoundingClientRect();
+  tip.style.left=(e.clientX-rect.left+12)+'px';
+  tip.style.top=(e.clientY-rect.top-10)+'px';
+  tip.style.display='block';
+}
+function hideTip(){document.getElementById('tip').style.display='none';}
+
+function selectCity(k){
+  document.getElementById('citySel').value=k;
+  activeCity=k; onCity();
+}
+
+function togglePulse(btn){showPulse=!showPulse;btn.classList.toggle('on');renderMap();}
+function toggleLabels(btn){showLabels=!showLabels;btn.classList.toggle('on');renderMap();}
+function zoomIndia(){/* SVG already fits */}
+
+function buildCards(){
+  const keys=Object.keys(CITIES).slice(0,5);
+  document.getElementById('cityCards').innerHTML=keys.map(k=>{
+    const d=LIVE[k], col=cc(d.cong);
+    return `<div class="bcard ${k===activeCity?'on':''}" onclick="selectCity('${k}')">
+      <div><div class="bcy">${CITIES[k].name}</div><div class="bcr">${CITIES[k].corridors[0].name.split(' ')[0]}</div></div>
+      <div>
+        <div class="bspd">${d.speed} <span>km/h</span></div>
+        <div class="bbar"><div class="bfill" style="width:${d.cong}%;background:${col}"></div></div>
+        <div style="font-size:.63rem;color:var(--muted);margin-top:3px">${d.cong}% congestion</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function initClock(){
+  function tick(){
+    const n=new Date();
+    document.getElementById('clock').textContent=`${n.getHours().toString().padStart(2,'0')}:${n.getMinutes().toString().padStart(2,'0')}:${n.getSeconds().toString().padStart(2,'0')}`;
+    document.getElementById('daySel').value=n.getDay()===0?6:n.getDay()-1;
+  }
+  tick(); setInterval(tick,1000);
+}
+
+function init(){
+  onCity(); buildCards(); initClock();
+  const now=new Date();
+  document.getElementById('hrSlider').value=now.getHours();
+  updateHr(now.getHours());
+  updateOverlay();
+}
+init();
+</script>
+</body>
+</html>
