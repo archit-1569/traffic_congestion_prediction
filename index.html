@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrafficSense Delhi</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin=""
+    >
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main class="dashboard">
+        <header class="topbar">
+            <div class="brand">
+                <div class="brand-mark"></div>
+                <div>
+                    <p class="brand-kicker">Delhi Mobility Intelligence</p>
+                    <h1>TrafficSense <span>Delhi</span></h1>
+                </div>
+            </div>
+
+            <div class="topbar-stats">
+                <button id="toggle-app-theme" class="pill pill-toggle" type="button">Light UI</button>
+                <div class="pill"><span id="trip-count">4,000</span> Trips</div>
+                <div class="pill pill-cyan"><span id="area-count">25</span> Areas</div>
+                <div class="pill pill-green">Live Model</div>
+            </div>
+        </header>
+
+        <section class="layout">
+            <aside class="sidebar">
+                <nav class="tabs">
+                    <button class="tab active" data-tab="route">Route Predict</button>
+                    <button class="tab" data-tab="overview">City Overview</button>
+                </nav>
+
+                <section id="route-panel" class="panel-section active">
+                    <div class="section-heading">
+                        <p>Route Planner</p>
+                        <h2>Select Route</h2>
+                    </div>
+
+                    <form id="route-form" class="control-grid" novalidate>
+                        <label class="full-width">
+                            <span>Commute Scope</span>
+                            <div class="input-shell">
+                                <span class="input-icon">◈</span>
+                                <select id="trip_scope" required>
+                                    <option value="city">Delhi City Route</option>
+                                    <option value="intercity">Intercity Commute</option>
+                                </select>
+                            </div>
+                        </label>
+
+                        <label>
+                            <span>From</span>
+                            <div class="input-shell">
+                                <span class="input-icon">◎</span>
+                                <select id="start_area" required></select>
+                            </div>
+                        </label>
+
+                        <label>
+                            <span>To</span>
+                            <div class="input-shell">
+                                <span class="input-icon">◉</span>
+                                <select id="end_area" required></select>
+                            </div>
+                        </label>
+
+                        <label>
+                            <span>Time of Day</span>
+                            <div class="input-shell">
+                                <span class="input-icon">◷</span>
+                                <select id="time_of_day" required></select>
+                            </div>
+                        </label>
+
+                        <label>
+                            <span>Day Type</span>
+                            <div class="input-shell">
+                                <span class="input-icon">◫</span>
+                                <select id="day_of_week" required></select>
+                            </div>
+                        </label>
+
+                        <label class="full-width">
+                            <span>Weather</span>
+                            <div class="input-shell">
+                                <span class="input-icon">◌</span>
+                                <select id="weather_condition" required></select>
+                            </div>
+                        </label>
+
+                        <label>
+                            <span>Road Type</span>
+                            <div class="input-shell">
+                                <span class="input-icon">≋</span>
+                                <input type="text" id="road_type" placeholder="Auto from route" readonly>
+                            </div>
+                        </label>
+
+                        <label>
+                            <span>Distance (km)</span>
+                            <div class="input-shell">
+                                <span class="input-icon">⇄</span>
+                                <input type="number" id="distance_km" min="1" step="0.1" placeholder="Auto from route" readonly>
+                            </div>
+                        </label>
+
+                        <button type="submit" class="primary-button" id="predict-button">
+                            <span class="button-label">Predict Route</span>
+                            <span class="button-spinner hidden" aria-hidden="true"></span>
+                        </button>
+                    </form>
+
+                    <div id="route-loading" class="inline-status hidden">Running route prediction...</div>
+                    <div id="route-error" class="inline-error hidden"></div>
+
+                    <div class="stats-card main-result">
+                        <p class="small-label">Predicted Traffic State</p>
+                        <div class="metric-line">
+                            <strong id="result-prediction">Waiting</strong>
+                            <span id="result-density-badge" class="badge badge-neutral">No Route</span>
+                        </div>
+                        <div class="speed-line">
+                            <span id="result-speed">--</span>
+                            <small>km/h</small>
+                        </div>
+                        <div class="meter">
+                            <div id="result-meter-fill" class="meter-fill"></div>
+                        </div>
+                        <p id="result-summary" class="support-text">
+                            Pick a route to see estimated speed, ETA, and congestion.
+                        </p>
+                    </div>
+
+                    <div class="mini-card-grid">
+                        <article class="stats-card">
+                            <p class="small-label">ETA</p>
+                            <strong id="result-travel-time">--</strong>
+                        </article>
+                        <article class="stats-card">
+                            <p class="small-label">Distance</p>
+                            <strong id="result-distance">--</strong>
+                        </article>
+                        <article class="stats-card">
+                            <p class="small-label">Road Type</p>
+                            <strong id="result-road-type">--</strong>
+                        </article>
+                        <article class="stats-card">
+                            <p class="small-label">Confidence</p>
+                            <strong id="result-confidence">--</strong>
+                        </article>
+                        <article class="stats-card full-width">
+                            <p class="small-label">Suggested Action</p>
+                            <strong id="result-suggestion">--</strong>
+                        </article>
+                    </div>
+
+                    <div class="stats-card">
+                        <p class="small-label">Route Simulation</p>
+                        <div id="route-options" class="route-options"></div>
+                    </div>
+                </section>
+
+                <section id="overview-panel" class="panel-section">
+                    <div class="section-heading">
+                        <p>Congestion Controls</p>
+                        <h2>City Overview</h2>
+                    </div>
+
+                    <form id="overview-form" class="control-grid" novalidate>
+                        <label class="full-width">
+                            <span>Time of Day</span>
+                            <div class="input-shell">
+                                <span class="input-icon">◷</span>
+                                <select id="overview_time_of_day"></select>
+                            </div>
+                        </label>
+
+                        <label>
+                            <span>Day</span>
+                            <div class="input-shell">
+                                <span class="input-icon">◫</span>
+                                <select id="overview_day_of_week"></select>
+                            </div>
+                        </label>
+
+                        <label>
+                            <span>Weather</span>
+                            <div class="input-shell">
+                                <span class="input-icon">◌</span>
+                                <select id="overview_weather_condition"></select>
+                            </div>
+                        </label>
+
+                        <button type="submit" class="secondary-button">Run City Analysis</button>
+                    </form>
+
+                    <div id="overview-loading" class="inline-status hidden">Analyzing city traffic...</div>
+                    <div id="overview-error" class="inline-error hidden"></div>
+
+                    <div class="stats-card main-result">
+                        <p class="small-label">Avg Congestion Across Delhi</p>
+                        <div class="metric-line">
+                            <strong id="overview-congestion">--</strong>
+                            <span id="overview-badge" class="badge badge-neutral">Awaiting Filter</span>
+                        </div>
+                        <div class="speed-line">
+                            <span id="overview-speed">--</span>
+                            <small>km/h avg</small>
+                        </div>
+                        <div class="meter">
+                            <div id="overview-meter-fill" class="meter-fill meter-fill-cyan"></div>
+                        </div>
+                        <p id="overview-summary" class="support-text">
+                            Use the filters to see hotspot intensity and average city movement.
+                        </p>
+                    </div>
+
+                    <div class="mini-card-grid">
+                        <article class="stats-card">
+                            <p class="small-label">Extra Delay</p>
+                            <strong id="overview-delay">--</strong>
+                        </article>
+                        <article class="stats-card">
+                            <p class="small-label">Hotspots</p>
+                            <strong id="overview-hotspots">--</strong>
+                        </article>
+                    </div>
+                </section>
+            </aside>
+
+            <section class="map-stage">
+                <div class="map-header">
+                    <div>
+                        <p class="small-label">Live Corridor</p>
+                        <h2 id="map-title">Delhi Traffic Network</h2>
+                    </div>
+                    <div class="map-actions">
+                        <button id="toggle-heatmap" class="ghost-button" type="button">Hide Heatmap</button>
+                        <button id="toggle-map-theme" class="ghost-button" type="button">Light Map</button>
+                        <button id="reset-map" class="ghost-button" type="button">Reset</button>
+                    </div>
+                </div>
+
+                <div id="map"></div>
+            </section>
+        </section>
+
+        <section class="quick-routes-shell">
+            <div class="quick-routes-header">
+                <p class="small-label">Quick Routes</p>
+                <h2>Click Any Corridor To Predict</h2>
+            </div>
+            <div id="quick-routes" class="quick-routes"></div>
+        </section>
+    </main>
+
+    <script
+        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""
+    ></script>
+    <script src="script.js"></script>
+</body>
+</html>
